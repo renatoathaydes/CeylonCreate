@@ -1,7 +1,11 @@
-*.class
+modules/
+classes/
+.ceylon/
+.settings/
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
+.classpath
+.project
+*.class
 
 # Package Files #
 *.jar

@@ -1,12 +1,15 @@
 
-String defaultProjectName = "myProject";
-String prompt = ">";
+shared String defaultProjectName = "myProject";
+shared String defaultModuleName = "myModule";
+shared String prompt = ">";
 String invalidProjectNameErrorMessage =
         """Please enter a valid project name.
            A valid project name must contain only letters and digits, and must start with a letter.""";
 String invalidModuleNameErrorMessage =
         """Please enter a valid project name.
            A valid project name must contain only letters and digits, and must start with a letter.""";
+
+Character[] validProjectNameSpecialChars = ['_', '-', '(', ')', '[', ']', '{', '}', ',', ' '];
 
 void ceylonCreate() {
     print(
@@ -24,7 +27,7 @@ void ceylonCreate() {
     value allModules = SequenceBuilder<String>();
     
     value moduleName = acceptValidAnswer(process.readLine,
-        validateModuleName, invalidModuleNameErrorMessage, projectName);
+        validateModuleName, invalidModuleNameErrorMessage, moduleNameFromValidProjectName(projectName));
     allModules.append(moduleName);
     
     value createTestModule = acceptYesOrNoAnswer("Would you like to create a test module?", process.readLine, "yes");
@@ -51,28 +54,61 @@ void ceylonCreate() {
 }
 
 shared String? validateProjectName(String name) {
-    if (!name.trimmed.empty) {
-        //TODO actual validation
-        return name.trimmed;
-    } else {
-        return null;
+    value trimmedName = name.trimmed;
+    function validProjectNameChar(Character c) => c.letter ||
+            c.digit || c in validProjectNameSpecialChars;
+    if (!trimmedName.empty,
+        trimmedName.every(validProjectNameChar)) {
+        return trimmedName;
     }
+    return null;
 }
 
+Boolean validModuleNameFirstChar(Character c) => c.lowercase || c == '_';
+
 shared String? validateModuleName(String name) {
-    if (!name.trimmed.empty) {
-        //TODO actual validation
-        return name.trimmed;
-    } else {
-        return null;
+    value trimmedName = name.trimmed;
+    function validModuleNameChar(Character c) => c.letter || c.digit || c in ['_', '.' ];
+    if (!trimmedName.empty,
+        validModuleNameFirstChar(trimmedName.first else 'X'),
+        trimmedName.every(validModuleNameChar),
+        !trimmedName.contains(".."),
+        !trimmedName.endsWith(".")) {
+        return trimmedName;
     }
+    return null;
 }
 
 shared String? validateTestModuleName(String name) {
-    if (exists moduleName = validateModuleName(name), moduleName.startsWith("test.")) {
+    if (exists moduleName = validateModuleName(name),
+        moduleName.startsWith("test.")) {
         return moduleName;
     } else {
         return null;
+    }
+}
+
+Character ensureValidModuleNameFirstChar(Character? first) {
+    assert(exists first);
+    if (validModuleNameFirstChar(first)) {
+        return first;
+    } else if (first.letter) {
+        return first.lowercased;
+    } else {
+        return '_';
+    }
+}
+
+shared String moduleNameFromValidProjectName(String name) {
+    function needsReplacement(Character c) => !c.digit && !c.letter;
+    String candidateName = String {
+        for (c in { ensureValidModuleNameFirstChar(name.first) }.chain(name.rest))
+        needsReplacement(c) then '_' else c
+    };
+    if (candidateName.every((Character c) => c == '_')) {
+        return defaultModuleName;
+    } else {
+        return candidateName;
     }
 }
 

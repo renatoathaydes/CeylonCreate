@@ -46,9 +46,11 @@ void ceylonCreate() {
         allModules.append(extraModule);
     }
     
-    print("Creating project ``projectName``");
+    createAllFiles(projectName, allModules.sequence);
+    
+    print("Created project ``projectName``");
     for (modName in allModules.sequence) {
-        print("Creating module ``modName``");
+        print("Created module ``modName``");
     }
     
 }

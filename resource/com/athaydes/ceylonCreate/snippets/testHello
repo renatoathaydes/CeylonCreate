@@ -1,0 +1,14 @@
+import ceylon.test {
+    test,
+    assertEquals
+}
+
+test void testHello() {
+    function getProperty(String key) => (key == "user.name") then "Me" else null;
+    assertEquals(greeting(getProperty), "Hello Me!");
+}
+
+test void testHelloWhenNoUserNameIsFound() {
+    function getProperty(String key) => null;
+    assertEquals(greeting(getProperty), "Hello Ceylon user!");
+}

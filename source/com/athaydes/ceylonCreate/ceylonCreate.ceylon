@@ -88,12 +88,14 @@ shared String? validateModuleName(String name) {
 
 shared String? validateTestModuleName(String name) {
     if (exists moduleName = validateModuleName(name),
-        moduleName.startsWith("test.")) {
+        testModuleName(moduleName)) {
         return moduleName;
     } else {
         return null;
     }
 }
+
+shared Boolean testModuleName(String moduleName) => moduleName.startsWith("test.");
 
 Character ensureValidModuleNameFirstChar(Character? first) {
     assert(exists first);

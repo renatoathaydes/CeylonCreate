@@ -5,7 +5,8 @@ import ceylon.file {
     Directory,
     Visitor,
     File,
-    Reader
+    Reader,
+    lines
 }
 import ceylon.test {
     test,
@@ -17,7 +18,8 @@ import ceylon.test {
 }
 
 import com.athaydes.ceylonCreate {
-    createAllFiles
+    createAllFiles,
+    localResource
 }
 
 shared class FilesCreationTest() {
@@ -58,7 +60,7 @@ shared class FilesCreationTest() {
     
     shared test void createsRunFiles() {
         assertTrue(mockFilesRoot.childPath("myProject/source/simpleModule/run.ceylon").resource is File);
-        assertTrue(mockFilesRoot.childPath("myProject/source/test/hi/testModule/run.ceylon").resource is File);
+        assertTrue(mockFilesRoot.childPath("myProject/source/test/hi/testModule/testRun.ceylon").resource is File);
     }
     
     shared test void createsModuleFiles() {
@@ -87,29 +89,29 @@ shared class FilesCreationTest() {
         assertNull(firstNonEmptyLine(moduleReader));
     }
     
-    shared test void testContentsOfRunFilesForSimpleModule() {
+    shared test void testContentsOfRunFileForSimpleModule() {
         assert(is File runFile = mockFilesRoot.childPath("myProject/source/simpleModule/run.ceylon").resource);
         
-        value runFileReader = runFile.Reader();
-        assertRunFunctionAsExpected(runFileReader);
+        try (runFileReader = runFile.Reader()) {
+            assertEquals(firstNonEmptyLine(runFileReader), "shared void run() {");
+            assertEquals(firstNonEmptyLine(runFileReader), """    print(greeting(process.propertyValue));""");
+            assertEquals(firstNonEmptyLine(runFileReader), "}");
+            assertEquals(firstNonEmptyLine(runFileReader), "shared String greeting(String?(String) getProperty)");
+            assertEquals(firstNonEmptyLine(runFileReader), """    => "Hello ``getProperty("user.name") else "Ceylon user"``!";""");
+            assertNull(firstNonEmptyLine(runFileReader));    
+        }
     }
     
-    shared test void testContentsOfRunFilesForTestModule() {
-        assert(is File runFile = mockFilesRoot.childPath("myProject/source/test/hi/testModule/run.ceylon").resource);
+    shared test void testContentsOfRunFileForTestModule() {
+        assert(is File runFile = mockFilesRoot.childPath("myProject/source/test/hi/testModule/testRun.ceylon").resource);
+        value actualText = lines(runFile).reduce((String partial, String line) => partial + "\n" + line);
+        assert(exists actualText);
         
-        value runFileReader = runFile.Reader();
-        assertRunFunctionAsExpected(runFileReader);
+        value testRunRs = localResource("snippets/testHello");
+        assert (exists expectedText = testRunRs?.textContent(), expectedText.size > 20);
+        assertEquals(actualText + "\n", expectedText);
     }
     
-    void assertRunFunctionAsExpected(Reader runFileReader) {
-        assertEquals(firstNonEmptyLine(runFileReader), "shared void run() {");
-        assertEquals(firstNonEmptyLine(runFileReader), """    print(greeting(process.propertyValue));""");
-        assertEquals(firstNonEmptyLine(runFileReader), "}");
-        assertEquals(firstNonEmptyLine(runFileReader), "shared String greeting(String?(String) getProperty)");
-        assertEquals(firstNonEmptyLine(runFileReader), """    => "Hello ``getProperty("user.name") else "Ceylon user"``!";""");
-        assertNull(firstNonEmptyLine(runFileReader));
-    }
-
     String? firstNonEmptyLine(Reader reader) {
         while (exists line = reader.readLine()) {
             if (!line.trimmed.empty) {

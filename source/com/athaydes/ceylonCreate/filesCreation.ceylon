@@ -43,7 +43,11 @@ void createFiles(Directory sourceDirectory, String moduleName) {
     assert(is Directory moduleDir = modulePath.resource);
     createModuleFile(moduleDir, moduleName);
     createPackageFile(moduleDir, moduleName);
-    createRunFile(moduleDir, moduleName);
+    if (testModuleName(moduleName)) {
+        createTestFile(moduleDir, moduleName);
+    } else {
+        createRunFile(moduleDir, moduleName);
+    }
 }
 
 void createModuleFile(Directory moduleDirectory, String moduleName) {
@@ -58,10 +62,16 @@ void createPackageFile(Directory moduleDirectory, String moduleName) {
 
 void createRunFile(Directory moduleDirectory, String moduleName) {
     assert(is Nil runFilePath = moduleDirectory.path.childPath("run.ceylon").resource);
-    process.propertyValue("");
-    value helloRs = localResource("snippets/hello.ceylon");
+    value helloRs = localResource("snippets/hello");
     assert(exists helloRs);
     tryWrite(runFilePath.createFile(), helloRs.textContent());
+}
+
+void createTestFile(Directory moduleDirectory, String moduleName) {
+    assert(is Nil runFilePath = moduleDirectory.path.childPath("testRun.ceylon").resource);
+    value testHelloRs = localResource("snippets/testHello");
+    assert(exists testHelloRs);
+    tryWrite(runFilePath.createFile(), testHelloRs.textContent());
 }
 
 void tryWrite(File file, String text) {
@@ -73,4 +83,4 @@ void tryWrite(File file, String text) {
     }
 }
 
-Resource? localResource(String path) => `module com.athaydes.ceylonCreate`.resourceByPath("com/athaydes/ceylonCreate/``path``");
+shared Resource? localResource(String path) => `module com.athaydes.ceylonCreate`.resourceByPath("com/athaydes/ceylonCreate/``path``");

@@ -59,16 +59,9 @@ void createPackageFile(Directory moduleDirectory, String moduleName) {
 void createRunFile(Directory moduleDirectory, String moduleName) {
     assert(is Nil runFilePath = moduleDirectory.path.childPath("run.ceylon").resource);
     process.propertyValue("");
-    tryWrite(runFilePath.createFile(),
-        """
-           "Run the module `""" + moduleName +
-        """`."
-           shared void run() {
-               print("Hello ``userName``!");
-           }
-           
-           shared String userName = process.propertyValue("user.home") else "Ceylon user";
-           """);
+    value helloRs = localResource("snippets/hello.ceylon");
+    assert(exists helloRs);
+    tryWrite(runFilePath.createFile(), helloRs.textContent());
 }
 
 void tryWrite(File file, String text) {
@@ -79,3 +72,5 @@ void tryWrite(File file, String text) {
         print("Error: ``e``");
     }
 }
+
+Resource? localResource(String path) => `module com.athaydes.ceylonCreate`.resourceByPath("com/athaydes/ceylonCreate/``path``");

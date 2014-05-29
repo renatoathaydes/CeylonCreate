@@ -91,7 +91,6 @@ shared class FilesCreationTest() {
         assert(is File runFile = mockFilesRoot.childPath("myProject/source/simpleModule/run.ceylon").resource);
         
         value runFileReader = runFile.Reader();
-        assertEquals(firstNonEmptyLine(runFileReader), "\"Run the module `simpleModule`.\"");
         assertRunFunctionAsExpected(runFileReader);
     }
     
@@ -99,16 +98,15 @@ shared class FilesCreationTest() {
         assert(is File runFile = mockFilesRoot.childPath("myProject/source/test/hi/testModule/run.ceylon").resource);
         
         value runFileReader = runFile.Reader();
-        assertEquals(firstNonEmptyLine(runFileReader), "\"Run the module `test.hi.testModule`.\"");
         assertRunFunctionAsExpected(runFileReader);
     }
     
     void assertRunFunctionAsExpected(Reader runFileReader) {
         assertEquals(firstNonEmptyLine(runFileReader), "shared void run() {");
-        assertEquals(firstNonEmptyLine(runFileReader), """    print("Hello ``userName``!");""");
+        assertEquals(firstNonEmptyLine(runFileReader), """    print(greeting(process.propertyValue));""");
         assertEquals(firstNonEmptyLine(runFileReader), "}");
-        assertEquals(firstNonEmptyLine(runFileReader),
-            """shared String userName = process.propertyValue("user.home") else "Ceylon user";""");
+        assertEquals(firstNonEmptyLine(runFileReader), "shared String greeting(String?(String) getProperty)");
+        assertEquals(firstNonEmptyLine(runFileReader), """    => "Hello ``getProperty("user.name") else "Ceylon user"``!";""");
         assertNull(firstNonEmptyLine(runFileReader));
     }
 

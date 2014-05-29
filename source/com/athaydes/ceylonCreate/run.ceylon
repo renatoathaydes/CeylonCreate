@@ -28,7 +28,7 @@ void printHelp() {
                ceylon run com.athaydes.ceylonCreate/``version`` [option]
            
            Options:
-               help          - displays this help and exit 
+               help          - display this help and exit 
                quiet         - do not ask questions, use defaults or passed arguments
                projectName   - project name
                moduleName    - module name

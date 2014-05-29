@@ -217,7 +217,7 @@ void printReport(String projectName, {String+} allModules, Boolean createEclipse
     if (createEclipseFiles) {
         write("""
                  To import your project into Eclipse, follow the instructions on:
-                 http://help.eclipse.org/helios/index.jsp?topic=%2Forg.eclipse.platform.doc.user%2Ftasks%2Ftasks-importproject.htm""");
+                 <http://help.eclipse.org/helios/index.jsp?topic=%2Forg.eclipse.platform.doc.user%2Ftasks%2Ftasks-importproject.htm>""");
     }
     write("");
     write("Change to your project's root directory by typing:");

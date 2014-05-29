@@ -10,6 +10,7 @@ shared void run() {
                 moduleName =  process.namedArgumentValue("moduleName");
                 noTest =      process.namedArgumentPresent("noTest");
                 noEclipse =   process.namedArgumentPresent("noEclipse");
+                output =      process.namedArgumentValue("output");
             });
         } catch(Throwable e) {
             print("ERROR: ``e``");
@@ -34,6 +35,7 @@ void printHelp() {
                moduleName    - module name
                noTest        - do not create test modules
                noEclipse     - do not create Eclipse files
+               output        - output directory (defaults to current directory)
              
            Examples:
              
@@ -52,4 +54,5 @@ shared class Options(
     shared String? projectName,
     shared String? moduleName,
     shared Boolean noTest,
-    shared Boolean noEclipse) {}
+    shared Boolean noEclipse,
+    shared String? output) {}

@@ -1,5 +1,4 @@
 import ceylon.file {
-    current,
     Nil,
     parsePath,
     Directory,
@@ -9,7 +8,7 @@ import ceylon.file {
 
 shared void createAllFiles(String projectName, {String*} moduleNames,
     Boolean createEclipseFiles,
-    String root = current.absolutePath.string) {
+    String root) {
     value projectPath = parsePath(root).childPath(projectName);
     
     "There is already a directory at the target project location. Cannot create project."

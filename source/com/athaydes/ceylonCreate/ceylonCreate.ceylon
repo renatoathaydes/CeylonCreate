@@ -1,3 +1,7 @@
+import ceylon.file {
+    current,
+    parsePath
+}
 
 shared String defaultProjectName = "myProject";
 shared String defaultModuleName = "myModule";
@@ -76,8 +80,9 @@ void ceylonCreate(Options options) {
         """Creating Eclipse files will allow you to easily import your project into the Eclipse IDE.
            Do you want to create Eclipse files?""", process.readLine, "yes");
     
-    createAllFiles(projectName, allModules.sequence, createEclipseFiles);
-    printReport(projectName, allModules, createEclipseFiles, write);
+    value output = options.output else current.absolutePath.string;
+    createAllFiles(projectName, allModules.sequence, createEclipseFiles, output);
+    printReport(projectName, allModules, createEclipseFiles, output, write);
 }
 
 {String+} askAboutTestModule(Options options, String moduleName, {String+} allModules) {
@@ -209,7 +214,10 @@ shared Boolean acceptYesOrNoAnswer(Boolean quiet, String question, String?() ask
     }
 }
 
-void printReport(String projectName, {String+} allModules, Boolean createEclipseFiles, void write(String s)) {
+void printReport(String projectName, {String+} allModules,
+    Boolean createEclipseFiles,
+    String output,
+    void write(String s)) {
     print("Created project ``projectName``");
     for (modName in allModules.sequence) {
         print("Created module ``modName``");
@@ -221,7 +229,7 @@ void printReport(String projectName, {String+} allModules, Boolean createEclipse
     }
     write("");
     write("Change to your project's root directory by typing:");
-    write("    cd \"``projectName``\"");
+    write("    cd \"``parsePath(output).normalizedPath.childPath(projectName)``\"");
     write("You can then compile your modules with, for example:");
     write("    ceylon compile ``allModules.first``");
     write("After compiling, you can run the module:");

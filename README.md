@@ -18,11 +18,16 @@ A Ceylon tool to easily create new Ceylon project and modules
 ###   Examples:
      
    - Create a project called 'Good Times', asking iteractively about other settings:
-       ceylon run com.athaydes.ceylonCreate/1.0.0 --projectName="Good Times"
        
+```
+ceylon run com.athaydes.ceylonCreate/1.0.0 --projectName="Good Times"
+```
+    
    - Create a project using all the default values:
-       ceylon run com.athaydes.ceylonCreate/1.0.0 --quiet
-   
+
+```
+ceylon run com.athaydes.ceylonCreate/1.0.0 --quiet
+```   
 
 Once you've created a project, you can import it into Eclipse by following the instructions on:
 

@@ -27,7 +27,7 @@ shared class FilesCreationTest() {
     shared beforeTest void createMockFilesRoot() {
         assert(is Nil res = mockFilesRoot.resource);
         res.createDirectory();
-        createAllFiles("myProject", {"simpleModule", "test.hi.complexModule"}, mockFilesRoot.absolutePath.string);
+        createAllFiles("myProject", {"simpleModule", "test.hi.testModule"}, mockFilesRoot.absolutePath.string);
     }
     
     shared afterTest void removeMockFilesRoot() {
@@ -53,22 +53,22 @@ shared class FilesCreationTest() {
         assertTrue(mockFilesRoot.childPath("myProject/source/simpleModule").resource is Directory);
         assertTrue(mockFilesRoot.childPath("myProject/source/test").resource is Directory);
         assertTrue(mockFilesRoot.childPath("myProject/source/test/hi").resource is Directory);
-        assertTrue(mockFilesRoot.childPath("myProject/source/test/hi/complexModule").resource is Directory);
+        assertTrue(mockFilesRoot.childPath("myProject/source/test/hi/testModule").resource is Directory);
     }
     
     shared test void createsRunFiles() {
         assertTrue(mockFilesRoot.childPath("myProject/source/simpleModule/run.ceylon").resource is File);
-        assertTrue(mockFilesRoot.childPath("myProject/source/test/hi/complexModule/run.ceylon").resource is File);
+        assertTrue(mockFilesRoot.childPath("myProject/source/test/hi/testModule/run.ceylon").resource is File);
     }
     
     shared test void createsModuleFiles() {
         assertTrue(mockFilesRoot.childPath("myProject/source/simpleModule/module.ceylon").resource is File);
-        assertTrue(mockFilesRoot.childPath("myProject/source/test/hi/complexModule/module.ceylon").resource is File);
+        assertTrue(mockFilesRoot.childPath("myProject/source/test/hi/testModule/module.ceylon").resource is File);
     }
     
     shared test void createsPackageFiles() {
         assertTrue(mockFilesRoot.childPath("myProject/source/simpleModule/package.ceylon").resource is File);
-        assertTrue(mockFilesRoot.childPath("myProject/source/test/hi/complexModule/package.ceylon").resource is File);
+        assertTrue(mockFilesRoot.childPath("myProject/source/test/hi/testModule/package.ceylon").resource is File);
     }
     
     shared test void testContentsOfSimpleModuleFile() {
@@ -79,11 +79,11 @@ shared class FilesCreationTest() {
         assertNull(firstNonEmptyLine(moduleReader));
     }
 
-    shared test void testContentsOfComplexModuleFile() {
-        assert(is File moduleFile = mockFilesRoot.childPath("myProject/source/test/hi/complexModule/module.ceylon").resource);
+    shared test void testContentsOfTestModuleFile() {
+        assert(is File moduleFile = mockFilesRoot.childPath("myProject/source/test/hi/testModule/module.ceylon").resource);
         
         value moduleReader = moduleFile.Reader();
-        assertEquals(firstNonEmptyLine(moduleReader), "module test.hi.complexModule \"1.0.0\" {}");
+        assertEquals(firstNonEmptyLine(moduleReader), "module test.hi.testModule \"1.0.0\" {}");
         assertNull(firstNonEmptyLine(moduleReader));
     }
     
@@ -95,21 +95,23 @@ shared class FilesCreationTest() {
         assertRunFunctionAsExpected(runFileReader);
     }
     
-    shared test void testContentsOfRunFilesForComplexModule() {
-        assert(is File runFile = mockFilesRoot.childPath("myProject/source/test/hi/complexModule/run.ceylon").resource);
+    shared test void testContentsOfRunFilesForTestModule() {
+        assert(is File runFile = mockFilesRoot.childPath("myProject/source/test/hi/testModule/run.ceylon").resource);
         
         value runFileReader = runFile.Reader();
-        assertEquals(firstNonEmptyLine(runFileReader), "\"Run the module `test.hi.complexModule`.\"");
+        assertEquals(firstNonEmptyLine(runFileReader), "\"Run the module `test.hi.testModule`.\"");
         assertRunFunctionAsExpected(runFileReader);
     }
     
     void assertRunFunctionAsExpected(Reader runFileReader) {
         assertEquals(firstNonEmptyLine(runFileReader), "shared void run() {");
-        assertEquals(firstNonEmptyLine(runFileReader), """    print("Hello ``process.propertyValue("user.home") else "Ceylon user"``");""");
+        assertEquals(firstNonEmptyLine(runFileReader), """    print("Hello ``userName``!");""");
         assertEquals(firstNonEmptyLine(runFileReader), "}");
+        assertEquals(firstNonEmptyLine(runFileReader),
+            """shared String userName = process.propertyValue("user.home") else "Ceylon user";""");
         assertNull(firstNonEmptyLine(runFileReader));
     }
-    
+
     String? firstNonEmptyLine(Reader reader) {
         while (exists line = reader.readLine()) {
             if (!line.trimmed.empty) {

@@ -64,8 +64,10 @@ void createRunFile(Directory moduleDirectory, String moduleName) {
            "Run the module `""" + moduleName +
         """`."
            shared void run() {
-               print("Hello ``process.propertyValue("user.home") else "Ceylon user"``");
+               print("Hello ``userName``!");
            }
+           
+           shared String userName = process.propertyValue("user.home") else "Ceylon user";
            """);
 }
 

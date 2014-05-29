@@ -36,9 +36,9 @@ test shared void testAcceptYesOrNoAnswerUsesDefault() {
 
 test shared void testAcceptValidAnswer() {
     // valid answer
-    assertEquals(acceptValidAnswer(false, () => "A", (String a) => a, "", "", 1, () => "B"), "A");
+    assertEquals(acceptValidAnswer(false, () => "A", (String a) => a, "", "", 1, (String s) => "B"), "A");
     // invalid answer
-    assertEquals(acceptValidAnswer(false, () => "A", (String a) => null, "", "", 1, () => "B"), "B");
+    assertEquals(acceptValidAnswer(false, () => "A", (String a) => null, "", "", 1, (String s) => "B"), "B");
     // a few tries
     variable [String?*] answers = [null, null, "V"]; 
     function response(String s) {
@@ -46,7 +46,7 @@ test shared void testAcceptValidAnswer() {
         answers = answers.rest;
         return head;
     }
-    assertEquals(acceptValidAnswer(false, () => "A", response, "", "", 3, () => "B"), "V");
+    assertEquals(acceptValidAnswer(false, () => "A", response, "", "", 3, (String s) => "B"), "V");
     assertTrue(answers.empty);
 }
 

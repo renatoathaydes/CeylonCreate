@@ -120,7 +120,7 @@ void tryWrite(File file, String text) {
         writer.write(text);
     } catch (e) {
         print("There was a problem writing to file ``file.path.absolutePath``! Do you have access to write to this location?");
-        print("Error: ``e``");
+        exit("Error: ``e``");
     }
 }
 

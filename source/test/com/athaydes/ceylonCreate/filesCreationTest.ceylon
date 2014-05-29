@@ -29,7 +29,7 @@ shared class FilesCreationTest() {
     shared beforeTest void createMockFilesRoot() {
         assert(is Nil res = mockFilesRoot.resource);
         res.createDirectory();
-        createAllFiles("myProject", {"simpleModule", "test.hi.testModule"}, mockFilesRoot.absolutePath.string);
+        createAllFiles("myProject", {"simpleModule", "test.simpleModule"}, true, mockFilesRoot.absolutePath.string);
     }
     
     shared afterTest void removeMockFilesRoot() {
@@ -54,23 +54,22 @@ shared class FilesCreationTest() {
     shared test void createsModuleDirectories() {
         assertTrue(mockFilesRoot.childPath("myProject/source/simpleModule").resource is Directory);
         assertTrue(mockFilesRoot.childPath("myProject/source/test").resource is Directory);
-        assertTrue(mockFilesRoot.childPath("myProject/source/test/hi").resource is Directory);
-        assertTrue(mockFilesRoot.childPath("myProject/source/test/hi/testModule").resource is Directory);
+        assertTrue(mockFilesRoot.childPath("myProject/source/test/simpleModule").resource is Directory);
     }
     
     shared test void createsRunFiles() {
         assertTrue(mockFilesRoot.childPath("myProject/source/simpleModule/run.ceylon").resource is File);
-        assertTrue(mockFilesRoot.childPath("myProject/source/test/hi/testModule/testRun.ceylon").resource is File);
+        assertTrue(mockFilesRoot.childPath("myProject/source/test/simpleModule/testRun.ceylon").resource is File);
     }
     
     shared test void createsModuleFiles() {
         assertTrue(mockFilesRoot.childPath("myProject/source/simpleModule/module.ceylon").resource is File);
-        assertTrue(mockFilesRoot.childPath("myProject/source/test/hi/testModule/module.ceylon").resource is File);
+        assertTrue(mockFilesRoot.childPath("myProject/source/test/simpleModule/module.ceylon").resource is File);
     }
     
     shared test void createsPackageFiles() {
         assertTrue(mockFilesRoot.childPath("myProject/source/simpleModule/package.ceylon").resource is File);
-        assertTrue(mockFilesRoot.childPath("myProject/source/test/hi/testModule/package.ceylon").resource is File);
+        assertTrue(mockFilesRoot.childPath("myProject/source/test/simpleModule/package.ceylon").resource is Nil);
     }
     
     shared test void testContentsOfSimpleModuleFile() {
@@ -82,10 +81,13 @@ shared class FilesCreationTest() {
     }
 
     shared test void testContentsOfTestModuleFile() {
-        assert(is File moduleFile = mockFilesRoot.childPath("myProject/source/test/hi/testModule/module.ceylon").resource);
+        assert(is File moduleFile = mockFilesRoot.childPath("myProject/source/test/simpleModule/module.ceylon").resource);
         
         value moduleReader = moduleFile.Reader();
-        assertEquals(firstNonEmptyLine(moduleReader), "module test.hi.testModule \"1.0.0\" {}");
+        assertEquals(firstNonEmptyLine(moduleReader), "module test.simpleModule \"1.0.0\" {");
+        assertEquals(firstNonEmptyLine(moduleReader), "    import ceylon.test \"1.1.0\";");
+        assertEquals(firstNonEmptyLine(moduleReader), "    import simpleModule \"1.0.0\";");
+        assertEquals(firstNonEmptyLine(moduleReader), "}");
         assertNull(firstNonEmptyLine(moduleReader));
     }
     
@@ -103,12 +105,33 @@ shared class FilesCreationTest() {
     }
     
     shared test void testContentsOfRunFileForTestModule() {
-        assert(is File runFile = mockFilesRoot.childPath("myProject/source/test/hi/testModule/testRun.ceylon").resource);
-        value actualText = lines(runFile).reduce((String partial, String line) => partial + "\n" + line);
-        assert(exists actualText);
-        
-        value testRunRs = localResource("snippets/testHello");
-        assert (exists expectedText = testRunRs?.textContent(), expectedText.size > 20);
+        assertContentsAreTheSame(
+            mockFilesRoot.childPath("myProject/source/test/simpleModule/testRun.ceylon"),
+            localResource("snippets/testHello"));
+    }
+    
+    shared test void testContentsOfEclipseProjectFile() {
+        assertContentsAreTheSame(
+            mockFilesRoot.childPath("myProject/.project"),
+            localResource("eclipse/project"));
+    }
+    
+    shared test void testContentsOfEclipseClassPathFile() {
+        assertContentsAreTheSame(
+            mockFilesRoot.childPath("myProject/.classpath"),
+            localResource("eclipse/classpath"));
+    }
+    
+    shared test void testContentsOfEclipsePreferencesFile() {
+        assertContentsAreTheSame(
+            mockFilesRoot.childPath("myProject/.settings/org.eclipse.core.resources.prefs"),
+            localResource("eclipse/settings/org.eclipse.core.resources.prefs"));
+    }
+    
+    void assertContentsAreTheSame(Path actual, Resource? expected) {
+        assert(is File file = actual.resource);
+        assert (exists actualText = text(file));
+        assert (exists expectedText = expected?.textContent(), !expectedText.empty);
         assertEquals(actualText + "\n", expectedText);
     }
     
@@ -120,5 +143,7 @@ shared class FilesCreationTest() {
         }
         return null;
     }
+    
+    String? text(File file) => lines(file).reduce((String partial, String line) => partial + "\n" + line);
     
 }

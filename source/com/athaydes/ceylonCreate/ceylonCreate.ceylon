@@ -13,9 +13,10 @@ Character[] validProjectNameSpecialChars = ['_', '-', '(', ')', '[', ']', '{', '
 
 void ceylonCreate() {
     print(
-        """Welcome to CeylonCreate!
+        """******* Welcome to CeylonCreate! *******
+           
            To create your new project/module(s), you just need to answer a few questions first!
-           If you want, you can just hit 'Enter' to use the suggested default values shown inside [].
+           If you are unsure about a question, just hit 'Enter' to use the default values shown inside [].
            
            What will be the name of your project?""");
     value projectName = acceptValidAnswer(process.readLine,
@@ -24,30 +25,26 @@ void ceylonCreate() {
     print("""A project must contain at least one module.
              What would you like to call your module?""");
     
-    value allModules = SequenceBuilder<String>();
+    variable {String*} allModules = {};
     
     value moduleName = acceptValidAnswer(process.readLine,
         validateModuleName, invalidModuleNameErrorMessage, moduleNameFromValidProjectName(projectName));
-    allModules.append(moduleName);
+    allModules = allModules.chain { moduleName };
     
-    value createTestModule = acceptYesOrNoAnswer("Would you like to create a test module?", process.readLine, "yes");
-    if (createTestModule) {
-        print("Please give a name to your test module. Its name must start with 'test.'.");
-        value defaultTestModuleName = "test.``moduleName``";
-        value testModuleName = acceptValidAnswer(process.readLine, validateTestModuleName,
-            invalidModuleNameErrorMessage + "\nIt must also start with 'test.'", defaultTestModuleName);
-        allModules.append(testModuleName);
-    }
+    allModules = askAboutTestModule(moduleName, allModules);
     
     while (acceptYesOrNoAnswer("Would you like to create another module?", process.readLine, "no")) {
         print("Please enter the module name.");
         value extraModule = acceptValidAnswer(process.readLine,
             validateModuleName, invalidModuleNameErrorMessage);
-        allModules.append(extraModule);
+        allModules = allModules.chain { extraModule };
+        allModules = askAboutTestModule(extraModule, allModules);
     }
     
+    value createEclipseFiles = acceptYesOrNoAnswer("""Creating Eclipse files will allow you to easily import your project into the Eclipse IDE.
+                                                      Do you want to create Eclipse files?""", process.readLine, "yes");
     try {
-        createAllFiles(projectName, allModules.sequence);
+        createAllFiles(projectName, allModules.sequence, createEclipseFiles);
         
         print("Created project ``projectName``");
         for (modName in allModules.sequence) {
@@ -58,6 +55,18 @@ void ceylonCreate() {
         print("ERROR: ``message``");
     }
     
+}
+
+{String*} askAboutTestModule(String moduleName, {String*} allModules) {
+    value createTestModule = acceptYesOrNoAnswer(
+        "Would you like to create a test module for ``moduleName``?",
+        process.readLine, "yes");
+    
+    if (createTestModule) {
+        return allModules.chain { "test.``moduleName``" };
+    } else {
+        return allModules;
+    }
 }
 
 shared String? validateProjectName(String name) {

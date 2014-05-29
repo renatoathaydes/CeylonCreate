@@ -3,6 +3,10 @@ import ceylon.test {
     assertEquals
 }
 
+import ``moduleName`` {
+    greeting
+}
+
 test void testHello() {
     function getProperty(String key) => (key == "user.name") then "Me" else null;
     assertEquals(greeting(getProperty), "Hello Me!");

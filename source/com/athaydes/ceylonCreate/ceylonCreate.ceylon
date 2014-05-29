@@ -2,14 +2,25 @@
 shared String defaultProjectName = "myProject";
 shared String defaultModuleName = "myModule";
 shared String prompt = ">";
+
 String invalidProjectNameErrorMessage =
         """Please enter a valid project name.
-           A valid project name must contain only letters and digits, and must start with a letter.""";
+           A valid project name must contain only characters which are generally acceptable in file names.""";
+
 String invalidModuleNameErrorMessage =
-        """Please enter a valid project name.
-           A valid project name must contain only letters and digits, and must start with a letter.""";
+        """Please enter a valid module name.
+           A valid project name must:
+               - contain only letters and digits.
+               - not contain any keywords.
+               - start with a lower-cased letter.""";
 
 Character[] validProjectNameSpecialChars = ['_', '-', '(', ')', '[', ']', '{', '}', ',', ' '];
+
+[String+] ceylonKeywords = [ "assembly", "module", "package", "import", "alias", "class", "interface", "object",
+        "given", "value", "assign", "void", "function", "new", "of", "extends", "satisfies", 
+        "abstracts", "in", "out", "return", "break", "continue", "throw", "assert", "dynamic",
+        "if",  "else",  "switch",  "case",  "for", "while", "try", "catch", "finally", "then",
+        "let",  "this",  "outer",  "super",  "is",  "exists",  "nonempty" ];
 
 void ceylonCreate(Boolean quiet) {
     value write = quiet then (void(String s) {}) else process.writeLine; 
@@ -27,11 +38,9 @@ void ceylonCreate(Boolean quiet) {
     write("""A project must contain at least one module.
              What would you like to call your module?""");
     
-    variable {String*} allModules = {};
-    
     value moduleName = acceptValidAnswer(quiet, process.readLine,
         validateModuleName, invalidModuleNameErrorMessage, moduleNameFromValidProjectName(projectName));
-    allModules = allModules.chain { moduleName };
+    variable {String+} allModules = { moduleName };
     
     allModules = askAboutTestModule(quiet, moduleName, allModules);
     
@@ -50,10 +59,7 @@ void ceylonCreate(Boolean quiet) {
     try {
         createAllFiles(projectName, allModules.sequence, createEclipseFiles);
         
-        print("Created project ``projectName``");
-        for (modName in allModules.sequence) {
-            print("Created module ``modName``");
-        }
+        printReport(projectName, allModules, createEclipseFiles, write);
     } catch(Throwable e) {
         value message = e.message.trimmed.empty then e.string else e.message;
         print("ERROR: ``message``");
@@ -61,7 +67,7 @@ void ceylonCreate(Boolean quiet) {
     
 }
 
-{String*} askAboutTestModule(Boolean quiet, String moduleName, {String*} allModules) {
+{String+} askAboutTestModule(Boolean quiet, String moduleName, {String+} allModules) {
     value createTestModule = acceptYesOrNoAnswer(quiet,
         "Would you like to create a test module for ``moduleName``?",
         process.readLine, "yes");
@@ -92,8 +98,7 @@ shared String? validateModuleName(String name) {
     if (!trimmedName.empty,
         validModuleNameFirstChar(trimmedName.first else 'X'),
         trimmedName.every(validModuleNameChar),
-        !trimmedName.contains(".."),
-        !trimmedName.endsWith(".")) {
+        !(trimmedName.split('.'.equals, true, false)).containsAny(ceylonKeywords.chain {""})) {
         return trimmedName;
     }
     return null;
@@ -187,6 +192,26 @@ shared Boolean acceptYesOrNoAnswer(Boolean quiet, String question, String?() ask
     else {
         return exit();
     }
+}
+
+void printReport(String projectName, {String+} allModules, Boolean createEclipseFiles, void write(String s)) {
+    print("Created project ``projectName``");
+    for (modName in allModules.sequence) {
+        print("Created module ``modName``");
+    }
+    if (createEclipseFiles) {
+        write("""
+                 To import your project into Eclipse, follow the instructions on:
+                 http://help.eclipse.org/helios/index.jsp?topic=%2Forg.eclipse.platform.doc.user%2Ftasks%2Ftasks-importproject.htm
+                 """);
+    }
+    write("Change to your project's root directory by typing:");
+    write("    cd ``projectName``");
+    write("You can then compile your modules with, for example:");
+    write("    ceylon compile ``allModules.first``");
+    write("To run a module:");
+    write("    ceylon run ``allModules.first``/1.0.0");
+    write("");
 }
 
 Nothing exit() {

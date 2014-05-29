@@ -105,6 +105,14 @@ test shared void testValidateModuleName() {
     assertNull(validateModuleName(".ax.e"));
     assertNull(validateModuleName("a..e"));
     assertNull(validateModuleName("ax.ed."));
+    assertNull(validateModuleName("module"));
+    assertNull(validateModuleName("my.module"));
+    assertNull(validateModuleName("my.module.a"));
+    assertNull(validateModuleName("function"));
+    assertNull(validateModuleName("class"));
+    assertNull(validateModuleName("package"));
+    assertNull(validateModuleName("interface"));
+    assertNull(validateModuleName("void"));
     
     // valid Module names
     assertEquals(validateModuleName("_"), "_");

@@ -1,10 +1,11 @@
 modules/
 classes/
 .ceylon/
-.settings/
 
-.classpath
-.project
+/.settings/
+/.classpath
+/.project
+
 *.class
 
 # Package Files #

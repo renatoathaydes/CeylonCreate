@@ -11,45 +11,49 @@ String invalidModuleNameErrorMessage =
 
 Character[] validProjectNameSpecialChars = ['_', '-', '(', ')', '[', ']', '{', '}', ',', ' '];
 
-void ceylonCreate() {
-    print(
+void ceylonCreate(Boolean quiet) {
+    value write = quiet then (void(String s) {}) else process.writeLine; 
+    
+    write(
         """******* Welcome to CeylonCreate! *******
            
            To create your new project/module(s), you just need to answer a few questions first!
            If you are unsure about a question, just hit 'Enter' to use the default values shown inside [].
            
            What will be the name of your project?""");
-    value projectName = acceptValidAnswer(process.readLine,
+    value projectName = acceptValidAnswer(quiet, process.readLine,
         validateProjectName, invalidProjectNameErrorMessage, defaultProjectName);
     
-    print("""A project must contain at least one module.
+    write("""A project must contain at least one module.
              What would you like to call your module?""");
     
     variable {String*} allModules = {};
     
-    value moduleName = acceptValidAnswer(process.readLine,
+    value moduleName = acceptValidAnswer(quiet, process.readLine,
         validateModuleName, invalidModuleNameErrorMessage, moduleNameFromValidProjectName(projectName));
     allModules = allModules.chain { moduleName };
     
-    allModules = askAboutTestModule(moduleName, allModules);
+    allModules = askAboutTestModule(quiet, moduleName, allModules);
     
-    while (acceptYesOrNoAnswer("Would you like to create another module?", process.readLine, "no")) {
-        print("Please enter the module name.");
-        value extraModule = acceptValidAnswer(process.readLine,
+    while (acceptYesOrNoAnswer(quiet, "Would you like to create another module?", process.readLine, "no")) {
+        write("Please enter the module name.");
+        value extraModule = acceptValidAnswer(quiet, process.readLine,
             validateModuleName, invalidModuleNameErrorMessage);
         allModules = allModules.chain { extraModule };
-        allModules = askAboutTestModule(extraModule, allModules);
+        allModules = askAboutTestModule(quiet, extraModule, allModules);
     }
     
-    value createEclipseFiles = acceptYesOrNoAnswer("""Creating Eclipse files will allow you to easily import your project into the Eclipse IDE.
-                                                      Do you want to create Eclipse files?""", process.readLine, "yes");
+    value createEclipseFiles = acceptYesOrNoAnswer(quiet,
+        """Creating Eclipse files will allow you to easily import your project into the Eclipse IDE.
+           Do you want to create Eclipse files?""", process.readLine, "yes");
+    
     try {
         createAllFiles(projectName, allModules.sequence, createEclipseFiles);
         
         print("Created project ``projectName``");
         for (modName in allModules.sequence) {
             print("Created module ``modName``");
-        }    
+        }
     } catch(Throwable e) {
         value message = e.message.trimmed.empty then e.string else e.message;
         print("ERROR: ``message``");
@@ -57,8 +61,8 @@ void ceylonCreate() {
     
 }
 
-{String*} askAboutTestModule(String moduleName, {String*} allModules) {
-    value createTestModule = acceptYesOrNoAnswer(
+{String*} askAboutTestModule(Boolean quiet, String moduleName, {String*} allModules) {
+    value createTestModule = acceptYesOrNoAnswer(quiet,
         "Would you like to create a test module for ``moduleName``?",
         process.readLine, "yes");
     
@@ -130,9 +134,13 @@ shared String moduleNameFromValidProjectName(String name) {
     }
 }
 
-shared String acceptValidAnswer(String?() ask, String?(String) validate,
+shared String acceptValidAnswer(Boolean quiet, String?() ask, String?(String) validate,
                                 String errorMessage, String? default = null,
                                 Integer maxTries = 3, String() onTooManyInvalidAnswers = exit) {
+    if (quiet) {
+        assert(exists default);
+        return default;
+    }
     process.write("[``default else ""``]" + prompt);
     variable value tries = maxTries;
     while (exists answer = ask()) {
@@ -153,16 +161,22 @@ shared String acceptValidAnswer(String?() ask, String?(String) validate,
     return onTooManyInvalidAnswers();
 }
 
-shared Boolean acceptYesOrNoAnswer(String question, String?() ask, String default) {
-    print(question);
-    function validateYesOrNo(String answer) {
-        if (answer.trimmed.lowercased in ["y", "yes", "n", "no"]) {
-            return answer.trimmed.lowercased;
-        } else {
-            return null;
+shared Boolean acceptYesOrNoAnswer(Boolean quiet, String question, String?() ask, String default) {
+    String validAnswer;
+    if (!quiet) {
+        print(question);
+        function validateYesOrNo(String answer) {
+            if (answer.trimmed.lowercased in ["y", "yes", "n", "no"]) {
+                return answer.trimmed.lowercased;
+            } else {
+                return null;
+            }
         }
+        validAnswer = acceptValidAnswer(false, ask, validateYesOrNo, "Enter yes/y or no/n", default);    
+    } else {
+        validAnswer = default;
     }
-    value validAnswer = acceptValidAnswer(ask, validateYesOrNo, "Enter yes/y or no/n", default);
+    
     switch(validAnswer)
     case ("yes", "y") {
         return true;

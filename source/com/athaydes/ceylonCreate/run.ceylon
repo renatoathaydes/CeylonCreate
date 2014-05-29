@@ -1,4 +1,4 @@
 "Run the module `com.athaydes.ceylonCreate`."
 shared void run() {
-    ceylonCreate();
+    ceylonCreate(process.namedArgumentPresent("quiet"));
 }

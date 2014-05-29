@@ -1,9 +1,10 @@
 import ceylon.file {
     current,
     Nil,
-    Directory,
     parsePath,
-    File
+    Directory,
+    File,
+    lines
 }
 
 shared void createAllFiles(String projectName, {String*} moduleNames,
@@ -28,7 +29,7 @@ shared void createAllFiles(String projectName, {String*} moduleNames,
     }
     
     if (createEclipseFiles) {
-        createEclipseResources(projectDir);
+        createEclipseResources(projectDir, projectName);
     }
 }
 
@@ -36,8 +37,9 @@ void createDirectories(Directory sourceDirectory, String moduleName) {
     variable value currentPath = sourceDirectory.path;
     for (namePart in moduleName.split('.'.equals)) {
         value rs = currentPath.childPath(namePart).resource;
-        assert (is Nil rs);
-        rs.createDirectory();
+        if (is Nil rs) {
+            rs.createDirectory();    
+        }
         currentPath = rs.path;
     }
 }
@@ -84,17 +86,17 @@ void createRunFile(Directory moduleDirectory, String moduleName) {
     assert (is Nil runFilePath = moduleDirectory.path.childPath("run.ceylon").resource);
     value helloRs = localResource("snippets/hello");
     assert (exists helloRs);
-    tryWrite(runFilePath.createFile(), helloRs.textContent());
+    tryWrite(runFilePath.createFile(), interpolate(helloRs.textContent(), "moduleName" -> moduleName));
 }
 
 void createTestFile(Directory moduleDirectory, String moduleName) {
     assert (is Nil runFilePath = moduleDirectory.path.childPath("testRun.ceylon").resource);
     value testHelloRs = localResource("snippets/testHello");
     assert (exists testHelloRs);
-    tryWrite(runFilePath.createFile(), testHelloRs.textContent());
+    tryWrite(runFilePath.createFile(), interpolate(testHelloRs.textContent(), "moduleName" -> moduleName[5...]));
 }
 
-void createEclipseResources(Directory projectDirectory) {
+void createEclipseResources(Directory projectDirectory, String projectName) {
     value sourceClassPathRs = localResource("eclipse/classpath");
     value sourceProjectRs = localResource("eclipse/project");
     value sourcePreferencesRs = localResource("eclipse/settings/org.eclipse.core.resources.prefs");
@@ -104,7 +106,8 @@ void createEclipseResources(Directory projectDirectory) {
     tryWrite(classPathRs.createFile(), sourceClassPathRs.textContent());
     
     assert (is Nil projectRs = projectDirectory.path.childPath(".project").resource);
-    tryWrite(projectRs.createFile(), sourceProjectRs.textContent());
+    tryWrite(projectRs.createFile(), sourceProjectRs.textContent()
+        .replace("""``projectName``""", projectName));
     
     assert (is Nil settingsRs = projectDirectory.path.childPath(".settings").resource);
     value preferencesPath = settingsRs.createDirectory().path.childPath("org.eclipse.core.resources.prefs");
@@ -122,3 +125,13 @@ void tryWrite(File file, String text) {
 }
 
 shared Resource? localResource(String path) => `module com.athaydes.ceylonCreate`.resourceByPath("com/athaydes/ceylonCreate/``path``");
+
+String? text(File file) => lines(file).reduce((String partial, String line) => partial + "\n" + line);
+
+shared String interpolate(String text, <String->String>* replacements) {
+    if (exists replacement = replacements.first) {
+        return interpolate(text.replace("\`\```replacement.key``\`\`", replacement.item), *replacements.rest);    
+    } else {
+        return text;
+    }
+}

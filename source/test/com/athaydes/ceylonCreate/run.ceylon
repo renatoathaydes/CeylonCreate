@@ -15,26 +15,30 @@ import com.athaydes.ceylonCreate {
 }
 
 test shared void testAcceptYesOrNoAnswer() {
-    assertTrue(acceptYesOrNoAnswer("", () => "Yes", "n"));
-    assertTrue(acceptYesOrNoAnswer("", () => "yes", "n"));
-    assertTrue(acceptYesOrNoAnswer("", () => "y", "n"));
-    assertTrue(acceptYesOrNoAnswer("", () => "Y", "n"));
-    assertFalse(acceptYesOrNoAnswer("", () => "NO", "y"));
-    assertFalse(acceptYesOrNoAnswer("", () => "No", "y"));
-    assertFalse(acceptYesOrNoAnswer("", () => "no", "y"));
-    assertFalse(acceptYesOrNoAnswer("", () => "N", "y"));
+    assertTrue(acceptYesOrNoAnswer(false, "", () => "Yes", "n"));
+    assertTrue(acceptYesOrNoAnswer(false, "", () => "yes", "n"));
+    assertTrue(acceptYesOrNoAnswer(false, "", () => "y", "n"));
+    assertTrue(acceptYesOrNoAnswer(false, "", () => "Y", "n"));
+    assertFalse(acceptYesOrNoAnswer(false, "", () => "NO", "y"));
+    assertFalse(acceptYesOrNoAnswer(false, "", () => "No", "y"));
+    assertFalse(acceptYesOrNoAnswer(false, "", () => "no", "y"));
+    assertFalse(acceptYesOrNoAnswer(false, "", () => "N", "y"));
 }
 
 test shared void testAcceptYesOrNoAnswerUsesDefault() {
-    assertTrue(acceptYesOrNoAnswer("", () => "", "y"));
-    assertFalse(acceptYesOrNoAnswer("", () => "  ", "n"));
+    assertTrue(acceptYesOrNoAnswer(false, "", () => "", "y"));
+    assertFalse(acceptYesOrNoAnswer(false, "", () => "  ", "n"));
+    
+    // when quiet, always use the default
+    assertTrue(acceptYesOrNoAnswer(true, "", () => "n", "y"));
+    assertFalse(acceptYesOrNoAnswer(true, "", () => " y ", "n"));
 }
 
 test shared void testAcceptValidAnswer() {
     // valid answer
-    assertEquals(acceptValidAnswer(() => "A", (String a) => a, "", null, 1, () => "B"), "A");
+    assertEquals(acceptValidAnswer(false, () => "A", (String a) => a, "", "", 1, () => "B"), "A");
     // invalid answer
-    assertEquals(acceptValidAnswer(() => "A", (String a) => null, "", null, 1, () => "B"), "B");
+    assertEquals(acceptValidAnswer(false, () => "A", (String a) => null, "", "", 1, () => "B"), "B");
     // a few tries
     variable [String?*] answers = [null, null, "V"]; 
     function response(String s) {
@@ -42,7 +46,7 @@ test shared void testAcceptValidAnswer() {
         answers = answers.rest;
         return head;
     }
-    assertEquals(acceptValidAnswer(() => "A", response, "", null, 3, () => "B"), "V");
+    assertEquals(acceptValidAnswer(false, () => "A", response, "", "", 3, () => "B"), "V");
     assertTrue(answers.empty);
 }
 
